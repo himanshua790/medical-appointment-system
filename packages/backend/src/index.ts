@@ -5,6 +5,8 @@ import morgan from 'morgan';
 import mongoose from 'mongoose';
 import 'dotenv/config';
 import { routes } from './routes';
+import { errorHandler, notFound } from './middlewares/error.middleware';
+import ReminderService from './services/reminder.service';
 
 // Create Express app
 const app = express();
@@ -26,13 +28,24 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
+// Error handling middleware
+app.use(notFound);
+app.use(errorHandler);
+
 // Connect to MongoDB
-mongoose.connect(MONGODB_URI)
+mongoose
+  .connect(MONGODB_URI)
   .then(() => {
     console.log('Connected successfully to MongoDB');
+
     // Start server after establishing MongoDB connection
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
+
+      // Start reminder service
+      if (process.env.NODE_ENV !== 'test') {
+        ReminderService.startReminderCron(15); // Check every 15 minutes
+      }
     });
   })
   .catch((error) => {

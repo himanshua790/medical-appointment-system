@@ -1,0 +1,62 @@
+{
+  "admin": {
+    "username": "admin1",
+    "email": "admin1@example.com",
+    "password": "Admin123!"
+  },
+  "users": [
+    {
+      "username": "user1",
+      "email": "user1@example.com",
+      "password": "User123!"
+    },
+    {
+      "username": "user2",
+      "email": "user2@example.com",
+      "password": "User123!"
+    }
+  ],
+  "doctors": [
+    {
+      "username": "doctor1",
+      "email": "doctor1@example.com",
+      "password": "Doctor123!"
+    },
+    {
+      "username": "doctor2",
+      "email": "doctor2@example.com",
+      "password": "Doctor123!"
+    },
+    {
+      "username": "doctor3",
+      "email": "doctor3@example.com",
+      "password": "Doctor123!",
+      "specialty": "Cardiology"
+    },
+    {
+      "username": "doctor4",
+      "email": "doctor4@example.com",
+      "password": "Doctor123!",
+      "specialty": "Rheumatology"
+    },
+    {
+      "username": "doctor5",
+      "email": "doctor5@example.com",
+      "password": "Doctor123!",
+      "specialty": "Endocrinology"
+    },
+    {
+      "username": "doctor6",
+      "email": "doctor6@example.com",
+      "password": "Doctor123!",
+      "specialty": "Neurology"
+    },
+    {
+      "username": "doctor7",
+      "email": "doctor7@example.com",
+      "password": "Doctor123!",
+      "specialty": "Endocrinology"
+    }
+  ],
+  "message": "Full list of 20+ doctors not shown here for brevity"
+}

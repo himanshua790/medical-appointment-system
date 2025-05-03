@@ -1,79 +1,84 @@
+// src/middleware/auth.ts
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import User from '../models/user.model';
+import { IUser } from '@medical/shared/types';
 
-// Environment variables
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+// Fail fast if JWT secret is not set
+if (!process.env.JWT_SECRET) {
+  throw new Error('Missing JWT_SECRET in environment');
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 
-// Extend Express Request type
-declare global {
-  namespace Express {
-    interface Request {
-      user?: any;
-    }
-  }
+/**
+ * Strongly typed Request with optional user
+ */
+interface AuthRequest extends Request {
+  user?: IUser;
 }
 
 /**
- * Authentication middleware to verify JWT token
+ * Verify JWT and attach user to req.user
  */
-export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
+export const authenticate = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const authHeader = req.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    res.status(401).json({
+      success: false,
+      message: 'Access denied. No token provided.',
+    });
+    return;
+  }
+
+  const token = authHeader.slice(7);
+
   try {
-    // Get token from header
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        message: 'Access denied. No token provided.',
-      });
-    }
+    const payload = jwt.verify(token, JWT_SECRET) as JwtPayload & { id: string };
+    const user = await User.findById(payload.id).select('-password');
 
-    const token = authHeader.split(' ')[1];
-
-    // Verify token
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
-    
-    // Get user from database
-    const user = await User.findById(decoded.id).select('-password');
-    
     if (!user) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: 'Invalid token. User not found.',
       });
+      return;
     }
 
-    // Attach user to request object
     req.user = user;
-    
     next();
-  } catch (error) {
-    return res.status(401).json({
+  } catch (err) {
+    res.status(401).json({
       success: false,
-      message: 'Invalid token.',
+      message: 'Invalid or expired token.',
     });
   }
 };
 
 /**
- * Role-based authorization middleware
+ * Restrict access based on user roles
  */
 export const authorize = (...roles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
-        message: 'Unauthorized. Please login first.',
+        message: 'Unauthorized. Please log in first.',
       });
+      return;
     }
 
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({
+      res.status(403).json({
         success: false,
-        message: 'Forbidden. You do not have permission to access this resource.',
+        message: 'Forbidden. Insufficient permissions.',
       });
+      return;
     }
 
     next();
   };
-}; 
+};

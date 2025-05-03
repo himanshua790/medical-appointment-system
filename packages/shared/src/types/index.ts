@@ -1,8 +1,8 @@
 
 // Common types used across frontend and backend
+import { Types } from 'mongoose';
 
 export interface IUser {
-    _id?: string;
     username: string;
     email: string;
     password: string;
@@ -10,8 +10,7 @@ export interface IUser {
   }
   
   export interface IDoctor {
-    _id?: string;
-    userId: string;
+    userId: Types.ObjectId;
     name: string;
     specialty: string;
     bio?: string;
@@ -32,9 +31,8 @@ export interface IUser {
   }
   
   export interface IAppointment {
-    _id?: string;
-    patientId: string;
-    doctorId: string;
+    patientId: Types.ObjectId;
+    doctorId: Types.ObjectId;
     dateTime: Date;
     endTime: Date;
     reasonForVisit: string;

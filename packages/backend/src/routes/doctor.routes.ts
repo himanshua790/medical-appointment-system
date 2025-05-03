@@ -1,18 +1,24 @@
 import express, { Router } from 'express';
+import { 
+  getAllDoctors, 
+  getDoctorById, 
+  createDoctor, 
+  updateDoctor, 
+  deleteDoctor, 
+  getDoctorAvailability 
+} from '../controllers/doctor.controller';
+import { authenticate, authorize } from '../middlewares/auth.middleware';
 
-const router:Router = express.Router();
+const router: Router = express.Router();
 
-// TODO: Implement doctor controllers
-router.get('/', (req, res) => {
-  res.json({ message: 'Get all doctors' });
-});
+// Public routes
+router.get('/', getAllDoctors);
+router.get('/:id', getDoctorById);
+router.get('/:id/availability', getDoctorAvailability);
 
-router.get('/:id', (req, res) => {
-  res.json({ message: `Get doctor with id ${req.params.id}` });
-});
-
-router.get('/:id/availability', (req, res) => {
-  res.json({ message: `Get availability for doctor with id ${req.params.id}` });
-});
+// Protected routes
+router.post('/', authenticate, authorize('admin'), createDoctor);
+router.put('/:id', authenticate, authorize('admin', 'doctor'), updateDoctor);
+router.delete('/:id', authenticate, authorize('admin'), deleteDoctor);
 
 export default router; 

@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      axios:
+        specifier: ^1.9.0
+        version: 1.9.0
     devDependencies:
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.31.1
@@ -117,6 +121,9 @@ importers:
       '@mui/material':
         specifier: ^7.0.2
         version: 7.0.2(@emotion/react@11.14.0(@types/react@19.1.2)(react@19.1.0))(@emotion/styled@11.14.0(@emotion/react@11.14.0(@types/react@19.1.2)(react@19.1.0))(@types/react@19.1.2)(react@19.1.0))(@types/react@19.1.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      axios:
+        specifier: ^1.9.0
+        version: 1.9.0
       next:
         specifier: 15.3.1
         version: 15.3.1(@babel/core@7.27.1)(babel-plugin-macros@3.1.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -155,7 +162,11 @@ importers:
         specifier: ^5
         version: 5.8.3
 
-  packages/shared: {}
+  packages/shared:
+    dependencies:
+      mongoose:
+        specifier: ^8.14.1
+        version: 8.14.1
 
 packages:
 

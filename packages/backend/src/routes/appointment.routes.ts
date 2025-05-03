@@ -1,26 +1,23 @@
 import express, { Router } from 'express';
+import { 
+  getAppointments, 
+  getAppointmentById, 
+  createAppointment, 
+  updateAppointment, 
+  deleteAppointment 
+} from '../controllers/appointment.controller';
+import { authenticate, authorize } from '../middlewares/auth.middleware';
 
-const router:Router = express.Router();
+const router: Router = express.Router();
 
-// TODO: Implement appointment controllers
-router.get('/', (req, res) => {
-  res.json({ message: 'Get all appointments' });
-});
+// All appointment routes require authentication
+router.use(authenticate);
 
-router.post('/', (req, res) => {
-  res.json({ message: 'Create appointment', data: req.body });
-});
-
-router.get('/:id', (req, res) => {
-  res.json({ message: `Get appointment with id ${req.params.id}` });
-});
-
-router.put('/:id', (req, res) => {
-  res.json({ message: `Update appointment with id ${req.params.id}`, data: req.body });
-});
-
-router.delete('/:id', (req, res) => {
-  res.json({ message: `Delete appointment with id ${req.params.id}` });
-});
+// Routes with role-based authorization
+router.get('/', getAppointments);
+router.get('/:id', getAppointmentById);
+router.post('/', createAppointment);
+router.put('/:id', updateAppointment);
+router.delete('/:id', deleteAppointment);
 
 export default router; 
