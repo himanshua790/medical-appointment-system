@@ -12,8 +12,14 @@
     "declaration": true,
     "baseUrl": ".",
     "paths": {
+      "@medical/shared":  ["packages/shared/src"],
       "@medical/shared/*": ["packages/shared/src/*"]
     }
   },
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "references": [
+    { "path": "packages/shared" },
+    { "path": "packages/backend" },
+    { "path": "packages/frontend" }
+  ]
 }

@@ -1,36 +1,37 @@
 
 // Common types used across frontend and backend
 
-export interface User {
+export interface IUser {
     _id?: string;
     username: string;
     email: string;
+    password: string;
     role: 'patient' | 'doctor' | 'admin';
   }
   
-  export interface Doctor {
+  export interface IDoctor {
     _id?: string;
     userId: string;
     name: string;
     specialty: string;
     bio?: string;
-    workingHours: WorkingHours[];
-    unavailableTimes?: UnavailableTime[];
+    workingHours: IWorkingHours[];
+    unavailableTimes?: IUnavailableTime[];
   }
   
-  export interface WorkingHours {
+  export interface IWorkingHours {
     dayOfWeek: number; // 0-6, 0 is Sunday
     startTime: string; // format: "HH:MM"
     endTime: string; // format: "HH:MM"
   }
   
-  export interface UnavailableTime {
+  export interface IUnavailableTime {
     startDateTime: Date;
     endDateTime: Date;
     reason?: string;
   }
   
-  export interface Appointment {
+  export interface IAppointment {
     _id?: string;
     patientId: string;
     doctorId: string;
@@ -43,7 +44,7 @@ export interface User {
     reminderTime: Date;
   }
   
-  export interface TimeSlot {
+  export interface ITimeSlot {
     start: Date;
     end: Date;
     isAvailable: boolean;

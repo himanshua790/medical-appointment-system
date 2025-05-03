@@ -1,5 +1,7 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "composite": true,
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
@@ -19,9 +21,15 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
-    }
+      "@/*": ["./*"],
+      "@/components/*": ["./components/*"],
+      "@medical/shared/*": ["../shared/src/*"]
+    },
+    "baseUrl": "."
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "references": [
+    { "path": "../shared" }
+  ]
 }

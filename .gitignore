@@ -15,17 +15,27 @@ out
 # misc
 .DS_Store
 *.pem
+
+# Ignore all .env files at the root level
+.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# logs
+# Ignore all .env files within any subdirectory (including packages)
+**/.env
+**/.env.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
+
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# typescript
+# TypeScript
 *.tsbuildinfo
 
 # IDE
