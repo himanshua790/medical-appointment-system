@@ -1,69 +1,36 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
-import { Box, Button, Card, CardContent, Tab, Tabs, Typography, useMediaQuery, CircularProgress, Alert } from "@mui/material"
+import { useState } from "react"
+import { Box, Button, Card, CardContent, Tab, Tabs, Typography, CircularProgress, Alert } from "@mui/material"
 import Layout from "@/components/layout"
 import Link from "next/link"
 import { useParams } from "next/navigation"
-import { getDoctorById, getDoctorAvailability } from "@/app/services/doctorService"
+import { useGetDoctor, useGetDoctorAvailability } from "@/app/hooks/useDoctors"
 import { format } from "date-fns"
 
 export default function DoctorDetailPage() {
   const [tabValue, setTabValue] = useState(0)
-  const [doctor, setDoctor] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [availabilityDate, setAvailabilityDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'))
-  const [availability, setAvailability] = useState<any[]>([])
-  const [loadingAvailability, setLoadingAvailability] = useState(false)
   
   const params = useParams()
   const doctorId = params.id as string
 
-  useEffect(() => {
-    const fetchDoctor = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        const data = await getDoctorById(doctorId)
-        setDoctor(data.data)
-      } catch (err) {
-        console.error("Error fetching doctor:", err)
-        setError("Failed to load doctor details. Please try again later.")
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    if (doctorId) {
-      fetchDoctor()
-    }
-  }, [doctorId])
-
-  useEffect(() => {
-    const fetchAvailability = async () => {
-      if (tabValue === 1 && doctorId && availabilityDate) {
-        try {
-          setLoadingAvailability(true)
-          const data = await getDoctorAvailability(doctorId, availabilityDate)
-          setAvailability(data.data || [])
-        } catch (err) {
-          console.error("Error fetching availability:", err)
-        } finally {
-          setLoadingAvailability(false)
-        }
-      }
-    }
-
-    fetchAvailability()
-  }, [tabValue, doctorId, availabilityDate])
+  // Use React Query hooks
+  const { data: doctor, isLoading, error } = useGetDoctor(doctorId)
+  const { 
+    data: availability = [], 
+    isLoading: isLoadingAvailability 
+  } = useGetDoctorAvailability(
+    doctorId,
+    tabValue === 1 ? availabilityDate : ''
+  )
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue)
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Layout title="Loading Doctor Details">
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
@@ -76,7 +43,7 @@ export default function DoctorDetailPage() {
   if (error || !doctor) {
     return (
       <Layout title="Error">
-        <Alert severity="error">{error || "Doctor not found"}</Alert>
+        <Alert severity="error">{error instanceof Error ? error.message : "Doctor not found"}</Alert>
       </Layout>
     )
   }
@@ -144,7 +111,7 @@ export default function DoctorDetailPage() {
 
       {tabValue === 1 && (
         <Box>
-          {loadingAvailability ? (
+          {isLoadingAvailability ? (
             <CircularProgress size={24} />
           ) : availability && availability.length > 0 ? (
             <>

@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as appointmentService from '../services/appointmentService';
 
 // Query keys
@@ -10,90 +10,93 @@ export const appointmentKeys = {
   detail: (id: string) => [...appointmentKeys.details(), id] as const,
 };
 
-// Get all user appointments
-export const useUserAppointments = () => {
-  return useQuery(
-    appointmentKeys.lists(),
-    () => appointmentService.getUserAppointments(),
-    {
-      select: (data) => data.data || [],
-      staleTime: 0,
-    }
-  );
+// Get all appointments
+export const useGetAppointments = (filters = {}) => {
+  return useQuery({
+    queryKey: appointmentKeys.list(filters),
+    queryFn: () => appointmentService.getUserAppointments(),
+    select: (data) => data?.data || [],
+    staleTime: 0,
+  });
 };
 
-// Get a single appointment by ID
-export const useAppointmentById = (id: string) => {
-  return useQuery(
-    appointmentKeys.detail(id),
-    () => appointmentService.getAppointmentById(id),
-    {
-      select: (data) => data.data,
-      enabled: !!id,
-    }
-  );
+// Get appointment by ID
+export const useGetAppointment = (id: string) => {
+  return useQuery({
+    queryKey: appointmentKeys.detail(id),
+    queryFn: () => appointmentService.getAppointmentById(id),
+    select: (data) => data?.data,
+    enabled: !!id,
+  });
 };
 
-// Create an appointment
+// Create appointment
 export const useCreateAppointment = () => {
   const queryClient = useQueryClient();
-  
-  return useMutation(
-    (appointmentData: any) => appointmentService.createAppointment(appointmentData),
-    {
-      onSuccess: () => {
-        // Invalidate and refetch appointments list
-        queryClient.invalidateQueries(appointmentKeys.lists());
-      },
-    }
-  );
+
+  return useMutation({
+    mutationFn: (appointmentData: any) => appointmentService.createAppointment(appointmentData),
+    onSuccess: () => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
+    },
+  });
 };
 
-// Update an appointment
+// Update appointment
 export const useUpdateAppointment = () => {
   const queryClient = useQueryClient();
-  
-  return useMutation(
-    ({ id, data }: { id: string; data: any }) => appointmentService.updateAppointment(id, data),
-    {
-      onSuccess: (_, variables) => {
-        // Invalidate specific appointment and the lists
-        queryClient.invalidateQueries(appointmentKeys.detail(variables.id));
-        queryClient.invalidateQueries(appointmentKeys.lists());
-      },
-    }
-  );
+
+  return useMutation({
+    mutationFn: ({ id, appointmentData }: { id: string; appointmentData: any }) =>
+      appointmentService.updateAppointment(id, appointmentData),
+    onSuccess: (_, variables) => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
+    },
+  });
 };
 
-// Cancel an appointment
+// Delete appointment
+export const useDeleteAppointment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => appointmentService.cancelAppointment(id),
+    onSuccess: (_, id) => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
+      queryClient.removeQueries({ queryKey: appointmentKeys.detail(id) });
+    },
+  });
+};
+
+// Cancel appointment
 export const useCancelAppointment = () => {
   const queryClient = useQueryClient();
-  
-  return useMutation(
-    (id: string) => appointmentService.cancelAppointment(id),
-    {
-      onSuccess: (_, id) => {
-        // Invalidate specific appointment and the lists
-        queryClient.invalidateQueries(appointmentKeys.detail(id));
-        queryClient.invalidateQueries(appointmentKeys.lists());
-      },
-    }
-  );
+
+  return useMutation({
+    mutationFn: (id: string) => appointmentService.cancelAppointment(id),
+    onSuccess: (_, id) => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
+    },
+  });
 };
 
-// Reschedule an appointment
+// Reschedule appointment
 export const useRescheduleAppointment = () => {
   const queryClient = useQueryClient();
-  
-  return useMutation(
-    ({ id, newDateTime }: { id: string; newDateTime: string }) => 
+
+  return useMutation({
+    mutationFn: ({ id, newDateTime }: { id: string; newDateTime: string }) =>
       appointmentService.rescheduleAppointment(id, newDateTime),
-    {
-      onSuccess: (_, variables) => {
-        // Invalidate specific appointment and the lists
-        queryClient.invalidateQueries(appointmentKeys.detail(variables.id));
-        queryClient.invalidateQueries(appointmentKeys.lists());
-      },
-    }
-  );
-}; 
+    onSuccess: (_, variables) => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
+    },
+  });
+};

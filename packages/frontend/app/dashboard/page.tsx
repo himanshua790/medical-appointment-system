@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import Layout from "@/components/layout"
-import { useUserAppointments } from "../hooks/useAppointments"
+import { useGetAppointments } from "../hooks/useAppointments"
 import { Box, Button, Card, CardContent, Chip, CircularProgress, Grid, Typography } from "@mui/material"
 import Link from "next/link"
 
@@ -33,7 +33,7 @@ interface Appointment {
 
 export default function DashboardPage() {
   const { user, isLoading, isAuthenticated } = useAuth()
-  const { data: appointments = [], isLoading: isLoadingAppointments, error } = useUserAppointments()
+  const { data: appointments = [], isLoading: isLoadingAppointments, error } = useGetAppointments({ userId: user?._id })
   const router = useRouter()
 
   // Redirect to login if not authenticated and not loading
@@ -45,6 +45,7 @@ export default function DashboardPage() {
 
   // Filter for upcoming appointments
   const currentDate = new Date()
+  console.log('appointments', appointments);
   const upcomingAppointments = appointments
     .filter(
       (appointment: Appointment) => 

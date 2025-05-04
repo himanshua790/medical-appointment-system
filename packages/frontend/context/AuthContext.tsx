@@ -4,14 +4,14 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useLogin, useRegister, useCurrentUser } from '../app/hooks/useAuth';
 import { getToken, getUser, logout as logoutUtil } from '../utils/api';
 import { useRouter } from 'next/navigation';
-import { useQueryClient } from 'react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { IUser } from '@medical/shared/types';
 
 interface User extends IUser {
   _id: string;
 }
 
-interface AuthContextProps {
+interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -20,10 +20,11 @@ interface AuthContextProps {
   logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextProps>({
+// Create Context with default values
+const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: false,
-  isLoading: false,
+  isLoading: true,
   login: async () => {},
   register: async () => {},
   logout: () => {},

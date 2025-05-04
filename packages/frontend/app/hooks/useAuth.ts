@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from 'react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as authService from '../services/authService';
 import { IDoctor, IUser } from '@medical/shared/types';
 import { getToken, getUser } from '../../utils/api';
@@ -9,25 +9,22 @@ export const authKeys = {
   profile: ['auth', 'profile'] as const,
 };
 
+// Define response types
+interface AuthResponse {
+  user: IUser;
+  token: string;
+}
+
 /**
  * Get current user profile
  */
 export const useCurrentUser = () => {
-  // grab what's in localStorage
-  const token = getToken();
-  const storedUser = getUser();
-
-  return useQuery(authKeys.user, () => authService.getCurrentUser(), {
+  return useQuery({
+    queryKey: authKeys.user,
+    select: (data) => data?.data,
+    queryFn: () => authService.getCurrentUser(),
+    enabled: !!getToken(), // Only run if token exists
     retry: false,
-    refetchOnWindowFocus: false,
-    select: (data) => data.data,
-    // seed cache with stored user if you have one
-    initialData: storedUser ? { data: storedUser } : undefined,
-    // only hit the API when you have a token but no stored user
-    enabled: !!token && !storedUser,
-    onError: () => {
-      // silent fail if not actually authenticated
-    },
   });
 };
 
@@ -35,31 +32,30 @@ export const useCurrentUser = () => {
 export const useLogin = () => {
   const queryClient = useQueryClient();
 
-  return useMutation(
-    (credentials: { email: string; password: string }) => authService.login(credentials),
-    {
-      onSuccess: (data) => {
-        console.log('query data login ', data);
-        // Update the user in the cache
-        queryClient.setQueryData(authKeys.user, { data: data.user });
-        // set token acc to local storage
-        localStorage.setItem('token', data.token);
-        // persist user in localStorage for session persistence
-        localStorage.setItem('user', JSON.stringify(data.user));
-      },
-      onError: (error) => {
-        console.log('query error login ', error);
-      },
-    }
-  );
+  return useMutation({
+    mutationFn: (credentials: { email: string; password: string }) =>
+      authService.login(credentials),
+    onSuccess: (data: AuthResponse) => {
+      // Update the user in the cache
+      queryClient.setQueryData(authKeys.user, { data: data.user });
+      // set token acc to local storage
+      localStorage.setItem('token', data.token);
+      // persist user in localStorage for session persistence
+      localStorage.setItem('user', JSON.stringify(data.user));
+    },
+    onError: (error: unknown) => {
+      console.log('query error ', error);
+    },
+  });
 };
 
 // Register mutation
 export const useRegister = () => {
   const queryClient = useQueryClient();
 
-  return useMutation((userData: IUser | IDoctor) => authService.register(userData), {
-    onSuccess: (data) => {
+  return useMutation({
+    mutationFn: (userData: IUser | IDoctor) => authService.register(userData),
+    onSuccess: (data: AuthResponse) => {
       console.log('query data register ', data);
       // Update the user in the cache
       queryClient.setQueryData(authKeys.user, { data: data.user });
@@ -68,7 +64,7 @@ export const useRegister = () => {
       // persist user in localStorage for session persistence
       localStorage.setItem('user', JSON.stringify(data.user));
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
       console.log('query error ', error);
     },
   });
@@ -78,18 +74,20 @@ export const useRegister = () => {
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
 
-  return useMutation((profileData: any) => authService.updateUserProfile(profileData), {
-    onSuccess: (data) => {
+  return useMutation({
+    mutationFn: (profileData: any) => authService.updateUserProfile(profileData),
+    onSuccess: (data: any) => {
       // Update the profile and user in the cache
       queryClient.setQueryData(authKeys.user, { data: data });
-      queryClient.invalidateQueries(authKeys.profile);
+      queryClient.invalidateQueries({ queryKey: authKeys.profile });
     },
   });
 };
 
 // Change password mutation
 export const useChangePassword = () => {
-  return useMutation((passwordData: { currentPassword: string; newPassword: string }) =>
-    authService.changePassword(passwordData)
-  );
+  return useMutation({
+    mutationFn: (passwordData: { currentPassword: string; newPassword: string }) =>
+      authService.changePassword(passwordData),
+  });
 };

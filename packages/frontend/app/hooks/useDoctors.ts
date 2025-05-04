@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as doctorService from '../services/doctorService';
 
 // Query keys
@@ -8,87 +8,77 @@ export const doctorKeys = {
   list: (filters: any) => [...doctorKeys.lists(), { filters }] as const,
   details: () => [...doctorKeys.all, 'detail'] as const,
   detail: (id: string) => [...doctorKeys.details(), id] as const,
-  availability: (id: string, date: string) => [...doctorKeys.detail(id), 'availability', date] as const,
+  availability: (id: string, date: string) =>
+    [...doctorKeys.detail(id), 'availability', date] as const,
 };
 
-// Get all doctors with optional filtering
-export const useAllDoctors = (specialty?: string) => {
-  return useQuery(
-    doctorKeys.list({ specialty }),
-    () => doctorService.getAllDoctors(specialty),
-    {
-      select: (data) => data.data || [],
-    }
-  );
+// Get all doctors
+export const useGetDoctors = (filters: { specialty?: string } = {}) => {
+  return useQuery({
+    queryKey: doctorKeys.list(filters),
+    queryFn: () => doctorService.getAllDoctors(filters.specialty),
+    select: (data) => data?.data || [],
+  });
 };
 
-// Get a single doctor by ID
-export const useDoctorById = (id: string) => {
-  return useQuery(
-    doctorKeys.detail(id),
-    () => doctorService.getDoctorById(id),
-    {
-      select: (data) => data.data,
-      enabled: !!id,
-    }
-  );
+// Get doctor by ID
+export const useGetDoctor = (id: string) => {
+  return useQuery({
+    queryKey: doctorKeys.detail(id),
+    queryFn: () => doctorService.getDoctorById(id),
+    select: (data) => data?.data,
+    enabled: !!id,
+  });
 };
 
-// Get doctor availability for a specific date
-export const useDoctorAvailability = (id: string, date: string) => {
-  return useQuery(
-    doctorKeys.availability(id, date),
-    () => doctorService.getDoctorAvailability(id, date),
-    {
-      select: (data) => data.data || [],
-      enabled: !!id && !!date,
-    }
-  );
+// Get doctor availability
+export const useGetDoctorAvailability = (id: string, date: string) => {
+  return useQuery({
+    queryKey: doctorKeys.availability(id, date),
+    queryFn: () => doctorService.getDoctorAvailability(id, date),
+    select: (data) => data?.data || [],
+    enabled: !!id && !!date,
+  });
 };
 
-// Create a doctor
+// Create doctor
 export const useCreateDoctor = () => {
   const queryClient = useQueryClient();
-  
-  return useMutation(
-    (doctorData: any) => doctorService.createDoctor(doctorData),
-    {
-      onSuccess: () => {
-        // Invalidate and refetch doctors list
-        queryClient.invalidateQueries(doctorKeys.lists());
-      },
-    }
-  );
+
+  return useMutation({
+    mutationFn: (doctorData: any) => doctorService.createDoctor(doctorData),
+    onSuccess: () => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: doctorKeys.lists() });
+    },
+  });
 };
 
-// Update a doctor
+// Update doctor
 export const useUpdateDoctor = () => {
   const queryClient = useQueryClient();
-  
-  return useMutation(
-    ({ id, data }: { id: string; data: any }) => doctorService.updateDoctor(id, data),
-    {
-      onSuccess: (_, variables) => {
-        // Invalidate specific doctor and the lists
-        queryClient.invalidateQueries(doctorKeys.detail(variables.id));
-        queryClient.invalidateQueries(doctorKeys.lists());
-      },
-    }
-  );
+
+  return useMutation({
+    mutationFn: ({ id, doctorData }: { id: string; doctorData: any }) =>
+      doctorService.updateDoctor(id, doctorData),
+    onSuccess: (_, variables) => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: doctorKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: doctorKeys.lists() });
+    },
+  });
 };
 
-// Delete a doctor
+// Delete doctor
 export const useDeleteDoctor = () => {
   const queryClient = useQueryClient();
-  
-  return useMutation(
-    (id: string) => doctorService.deleteDoctor(id),
-    {
-      onSuccess: (_, id) => {
-        // Invalidate the lists and remove this doctor from the cache
-        queryClient.invalidateQueries(doctorKeys.lists());
-        queryClient.removeQueries(doctorKeys.detail(id));
-      },
-    }
-  );
-}; 
+
+  return useMutation({
+    mutationFn: (id: string) => doctorService.deleteDoctor(id),
+    onSuccess: (_, id) => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: doctorKeys.lists() });
+      queryClient.removeQueries({ queryKey: doctorKeys.detail(id) });
+    },
+  });
+};

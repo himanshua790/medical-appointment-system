@@ -24,7 +24,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import Layout from '@/components/layout';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useAllDoctors, useDoctorById, useDoctorAvailability } from '../hooks/useDoctors';
+import { useGetDoctors, useGetDoctor, useGetDoctorAvailability } from '../hooks/useDoctors';
 import { useCreateAppointment } from '../hooks/useAppointments';
 import { useAuth } from '@/context/AuthContext';
 import { format, parseISO } from 'date-fns';
@@ -56,13 +56,13 @@ export default function BookingPage() {
   const [error, setError] = useState<string | null>(null);
 
   // React Query hooks
-  const { data: doctors = [], isLoading: isLoadingDoctors } = useAllDoctors();
-  const { data: selectedDoctorData } = useDoctorById(selectedDoctor || '');
-  const { data: availabilityData = [], isLoading: isLoadingAvailability } = useDoctorAvailability(
+  const { data: doctors = [], isLoading: isLoadingDoctors } = useGetDoctors();
+  const { data: selectedDoctorData } = useGetDoctor(selectedDoctor || '');
+  const { data: availabilityData = [], isLoading: isLoadingAvailability } = useGetDoctorAvailability(
     selectedDoctor || '',
     selectedDate ? format(selectedDate, 'yyyy-MM-dd') : ''
   );
-  const { mutate: createAppointment, isLoading: isCreatingAppointment } = useCreateAppointment();
+  const { mutate: createAppointment, isPending: isCreatingAppointment } = useCreateAppointment();
 
   // Redirect if not authenticated
   useEffect(() => {

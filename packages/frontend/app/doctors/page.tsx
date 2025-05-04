@@ -3,7 +3,7 @@ import { useState } from "react"
 import { Box, Button, Card, CardContent, Grid, TextField, Typography, CircularProgress } from "@mui/material"
 import Layout from "@/components/layout"
 import Link from "next/link"
-import { useAllDoctors } from "../hooks/useDoctors"
+import { useGetDoctors } from "../hooks/useDoctors"
 
 interface Doctor {
   _id: string;
@@ -15,7 +15,7 @@ interface Doctor {
 
 export default function DoctorListingPage() {
   const [searchTerm, setSearchTerm] = useState("")
-  const { data: doctors = [], isLoading, error, refetch } = useAllDoctors()
+  const { data: doctors = [], isLoading, error, refetch } = useGetDoctors()
 
   const filteredDoctors = doctors.filter(
     (doctor: Doctor) =>

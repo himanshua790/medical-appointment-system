@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Box, Button, Card, CardContent, Chip, CircularProgress, Grid, Tab, Tabs, Typography } from "@mui/material"
 import Layout from "@/components/layout"
 import Link from "next/link"
-import { useUserAppointments, useCancelAppointment } from "../hooks/useAppointments"
+import { useGetAppointments, useCancelAppointment } from "../hooks/useAppointments"
 
 interface Appointment {
   _id: string;
@@ -31,8 +31,8 @@ interface Appointment {
 
 export default function AppointmentsPage() {
   const [tabValue, setTabValue] = useState(0)
-  const { data: appointments = [], isLoading, error, refetch } = useUserAppointments()
-  const { mutate: cancelAppointmentMutation, isLoading: isCancelling } = useCancelAppointment()
+  const { data: appointments = [], isLoading, error, refetch } = useGetAppointments()
+  const { mutate: cancelAppointmentMutation, isPending: isCancelling } = useCancelAppointment()
 
   const handleCancelAppointment = async (id: string) => {
     cancelAppointmentMutation(id, {
@@ -125,7 +125,7 @@ export default function AppointmentsPage() {
                           <Typography variant="body2">Notes: {appointment.notes}</Typography>
                         )}
 
-                        {(appointment.status.toLowerCase() === "confirmed" || appointment.status.toLowerCase() === "scheduled") && (
+                        {/* {(appointment.status.toLowerCase() === "confirmed" || appointment.status.toLowerCase() === "scheduled") && (
                           <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
                             <Button variant="outlined" component={Link} href={`/booking/reschedule/${appointment._id}`} size="small">
                               Reschedule
@@ -140,7 +140,7 @@ export default function AppointmentsPage() {
                               {isCancelling ? 'Cancelling...' : 'Cancel'}
                             </Button>
                           </Box>
-                        )}
+                        )} */}
                       </CardContent>
                     </Card>
                   </Grid>
