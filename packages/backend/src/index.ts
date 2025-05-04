@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
 import 'dotenv/config';
 import { routes } from './routes';
 import { errorHandler, notFound } from './middlewares/error.middleware';
-import ReminderService from './services/reminder.service';
+import { initializeReminderProcessor } from './services/reminder.service';
 
 // Create Express app
 const app = express();
@@ -39,13 +39,11 @@ mongoose
     console.log('Connected successfully to MongoDB');
 
     // Start server after establishing MongoDB connection
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
-
-      // Start reminder service
-      if (process.env.NODE_ENV !== 'test') {
-        ReminderService.startReminderCron(15); // Check every 15 minutes
-      }
+      
+      // Initialize the reminder processor
+      initializeReminderProcessor();
     });
   })
   .catch((error) => {

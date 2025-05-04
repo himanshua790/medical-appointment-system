@@ -23,7 +23,6 @@ import { useAuth } from "@/context/AuthContext"
 export default function Layout({ children, title }: { children: React.ReactNode; title?: string }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const { user, isAuthenticated, logout } = useAuth()
-  console.log('user', user)
   // Public navigation items
   const publicMenuItems = [
     { text: "Home", href: "/" },

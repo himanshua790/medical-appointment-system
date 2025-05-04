@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import Appointment from '../models/appointment.model';
 import Doctor from '../models/doctor.model';
+import { scheduleAppointmentReminder } from '../services/queue.service';
 
 /**
  * Get all appointments (filtered by user if requested)
@@ -240,6 +241,16 @@ export const createAppointment = async (
     });
 
     await appointment.save();
+
+    // Schedule a reminder 30 minutes after creation
+    const THIRTY_MINUTES_MS = 30 * 60 * 1000;
+    await scheduleAppointmentReminder(
+      appointment._id.toString(),
+      finalPatientId.toString(),
+      appointment.toObject(),
+      // THIRTY_MINUTES_MS
+      10000
+    );
 
     res.status(201).json({
       success: true,

@@ -1,6 +1,7 @@
 import Appointment from '../models/appointment.model';
-import User from '../models/user.model';
 import Doctor from '../models/doctor.model';
+import User from '../models/user.model';
+import { reminderQueue } from './queue.service';
 
 /**
  * Service for handling appointment reminders
@@ -108,5 +109,96 @@ export class ReminderService {
     }, intervalMinutes * 60 * 1000);
   }
 }
+
+// Process reminder jobs
+export const initializeReminderProcessor = (): void => {
+  reminderQueue.process(async (job) => {
+    const { appointmentId, userId, appointmentDetails } = job.data;
+    
+    try {
+      // Check if the appointment still exists and is not cancelled
+      const appointment = await Appointment.findOne({
+        _id: appointmentId,
+        status: 'scheduled', // Only remind for scheduled appointments
+      });
+      
+      if (!appointment) {
+        console.log(`Appointment ${appointmentId} no longer active, skipping reminder`);
+        return;
+      }
+      
+      // Check if the user is still valid
+      const user = await User.findById(userId);
+      if (!user) {
+        console.log(`User ${userId} not found, skipping reminder`);
+        return;
+      }
+      
+      // Get doctor details for the reminder
+      const doctor = await Doctor.findById(appointment.doctorId);
+      if (!doctor) {
+        console.log(`Doctor for appointment ${appointmentId} not found`);
+        return;
+      }
+      
+      // Check if user is logged in - we'll verify by checking active tokens
+      // This is a simplified check and would need to be replaced with your actual
+      // user session management logic
+      const isUserLoggedIn = await checkIfUserIsLoggedIn(userId);
+      
+      if (isUserLoggedIn) {
+        // Display reminder with all details
+        console.log('========== APPOINTMENT REMINDER ==========');
+        console.log(`Reminder for user: ${user.username} (${user.email})`);
+        console.log(`Appointment with: Dr. ${doctor.name} (${doctor.specialty})`);
+        console.log(`Date/Time: ${appointment.dateTime.toLocaleString()}`);
+        console.log(`Reason for visit: ${appointment.reasonForVisit}`);
+        console.log(`Notes: ${appointment.notes || 'None'}`);
+        console.log('==========================================');
+        
+        // Mark reminder as sent
+        await Appointment.findByIdAndUpdate(appointmentId, { reminderSent: true });
+      } else {
+        console.log(`User ${userId} is not logged in, skipping reminder display`);
+      }
+    } catch (error) {
+      console.error(`Error processing reminder for appointment ${appointmentId}:`, error);
+      throw error; // Rethrow to trigger Bull's retry mechanism
+    }
+  });
+  
+  console.log('Reminder processor initialized');
+};
+
+// Helper function to check if user is logged in
+// This would need to be replaced with your actual session management logic
+const checkIfUserIsLoggedIn = async (userId: string): Promise<boolean> => {
+  try {
+    // In a real application, you would check your session store or active tokens
+    // For example:
+    
+    // Option 1: Check a Redis store for active sessions
+    // const activeSession = await redisClient.get(`user-session:${userId}`);
+    // return activeSession !== null;
+    
+    // Option 2: Check a database table for active sessions
+    // const session = await Session.findOne({ userId, active: true });
+    // return !!session;
+    
+    // Option 3: Use your JWT token store or session management system
+    
+    // For this example, we're simply returning true (user is logged in)
+    // In a production app, replace this with actual session verification logic
+    console.log(`Checking if user ${userId} is logged in...`);
+    
+    // To simulate a user not being logged in sometimes, you could add:
+    // return Math.random() > 0.5; // 50% chance user is logged out
+    
+    return true;
+  } catch (error) {
+    console.error('Error checking user login status:', error);
+    return false;
+  }
+};
 
 export default ReminderService; 

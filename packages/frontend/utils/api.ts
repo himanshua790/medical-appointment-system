@@ -78,9 +78,9 @@ api.interceptors.response.use(
     console.log("response ", response)
     return response.data
   },
-  (error: AxiosError) => {
+  (error: AxiosError<{ message?: string }>) => {
     console.log("error ", error)
-    const message = error?.response?.data?.message || 'API request failed';
+    const message = error.response?.data?.message || error?.message || 'API request failed';
     return Promise.reject(new Error(message));
   }
 );

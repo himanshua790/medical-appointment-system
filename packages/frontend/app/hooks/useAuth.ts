@@ -34,6 +34,8 @@ export const useLogin = () => {
         queryClient.setQueryData(authKeys.user, { data: data.user });
         // set token acc to local storage
         localStorage.setItem('token', data.token);
+        // persist user in localStorage for session persistence
+        localStorage.setItem('user', JSON.stringify(data.user));
       },
       onError: (error) => {
         console.log('query error login ', error);
@@ -51,6 +53,8 @@ export const useRegister = () => {
       console.log('query data ', data);
       // Update the user in the cache
       queryClient.setQueryData(authKeys.user, { data: data.user });
+      // persist registered user in localStorage
+      localStorage.setItem('user', JSON.stringify(data.user));
     },
     onError: (error) => {
       console.log('query error ', error);
