@@ -10,11 +10,25 @@ import Link from "next/link"
 
 interface Appointment {
   _id: string;
-  doctorId: any;
+  patientId: {
+    _id: string;
+    username: string;
+    email: string;
+  };
+  doctorId: {
+    _id: string;
+    name: string;
+    specialty: string;
+  };
   dateTime: string;
-  reason: string;
+  endTime: string;
+  reasonForVisit: string;
   status: string;
-  doctorName?: string;
+  notes?: string;
+  reminderSent?: boolean;
+  reminderTime?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export default function DashboardPage() {
@@ -35,7 +49,7 @@ export default function DashboardPage() {
     .filter(
       (appointment: Appointment) => 
         new Date(appointment.dateTime) >= currentDate && 
-        appointment.status !== "Cancelled"
+        appointment.status.toLowerCase() !== "cancelled"
     )
     .sort((a: Appointment, b: Appointment) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
     .slice(0, 3) // Show only the next 3 upcoming appointments
@@ -108,15 +122,15 @@ export default function DashboardPage() {
                         }}
                       >
                         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-                          <Typography variant="subtitle1">{appointment.doctorName}</Typography>
+                          <Typography variant="subtitle1">{appointment.doctorId?.name}</Typography>
                           <Chip 
                             label={appointment.status} 
                             size="small" 
-                            color={appointment.status === "Confirmed" ? "success" : "warning"}
+                            color={appointment.status.toLowerCase() === "confirmed" || appointment.status.toLowerCase() === "scheduled" ? "success" : "warning"}
                           />
                         </Box>
                         <Typography variant="body2">{date} at {time}</Typography>
-                        <Typography variant="body2" color="text.secondary">{appointment.reason}</Typography>
+                        <Typography variant="body2" color="text.secondary">{appointment.reasonForVisit}</Typography>
                       </Box>
                     )
                   })

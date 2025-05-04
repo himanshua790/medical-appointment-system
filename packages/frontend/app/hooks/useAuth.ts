@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import * as authService from '../services/authService';
 import { IDoctor, IUser } from '@medical/shared/types';
+import { getToken, getUser } from '../../utils/api';
 
 // Query keys
 export const authKeys = {
@@ -8,15 +9,24 @@ export const authKeys = {
   profile: ['auth', 'profile'] as const,
 };
 
-// Get current user profile
+/**
+ * Get current user profile
+ */
 export const useCurrentUser = () => {
+  // grab what's in localStorage
+  const token = getToken();
+  const storedUser = getUser();
+
   return useQuery(authKeys.user, () => authService.getCurrentUser(), {
     retry: false,
     refetchOnWindowFocus: false,
     select: (data) => data.data,
+    // seed cache with stored user if you have one
+    initialData: storedUser ? { data: storedUser } : undefined,
+    // only hit the API when you have a token but no stored user
+    enabled: !!token && !storedUser,
     onError: () => {
-      // If we get an error, it's likely because the user is not authenticated
-      // We can handle this by not doing anything special here
+      // silent fail if not actually authenticated
     },
   });
 };
@@ -48,12 +58,14 @@ export const useLogin = () => {
 export const useRegister = () => {
   const queryClient = useQueryClient();
 
-  return useMutation((userData: IUser| IDoctor) => authService.register(userData), {
+  return useMutation((userData: IUser | IDoctor) => authService.register(userData), {
     onSuccess: (data) => {
-      console.log('query data ', data);
+      console.log('query data register ', data);
       // Update the user in the cache
       queryClient.setQueryData(authKeys.user, { data: data.user });
-      // persist registered user in localStorage
+      // set token acc to local storage
+      localStorage.setItem('token', data.token);
+      // persist user in localStorage for session persistence
       localStorage.setItem('user', JSON.stringify(data.user));
     },
     onError: (error) => {

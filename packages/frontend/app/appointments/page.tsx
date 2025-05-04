@@ -8,14 +8,25 @@ import { useUserAppointments, useCancelAppointment } from "../hooks/useAppointme
 
 interface Appointment {
   _id: string;
-  doctorId: any;
-  userId: any;
+  patientId: {
+    _id: string;
+    username: string;
+    email: string;
+  };
+  doctorId: {
+    _id: string;
+    name: string;
+    specialty: string;
+  };
   dateTime: string;
-  reason: string;
+  endTime: string;
+  reasonForVisit: string;
   status: string;
-  doctorName?: string;
-  doctorSpecialty?: string;
-  location?: string;
+  notes?: string;
+  reminderSent?: boolean;
+  reminderTime?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export default function AppointmentsPage() {
@@ -33,14 +44,16 @@ export default function AppointmentsPage() {
   }
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Confirmed":
+    switch (status.toLowerCase()) {
+      case "confirmed":
+      case "scheduled":
         return "success"
-      case "Pending":
+      case "pending":
         return "warning"
-      case "Completed":
+      case "completed":
         return "info"
-      case "Cancelled":
+      case "cancelled":
+      case "canceled":
         return "error"
       default:
         return "default"
@@ -52,15 +65,17 @@ export default function AppointmentsPage() {
   const upcomingAppointments = appointments.filter(
     (appointment: Appointment) => 
       new Date(appointment.dateTime) >= currentDate && 
-      appointment.status !== "Cancelled"
+      appointment.status.toLowerCase() !== "cancelled" && 
+      appointment.status.toLowerCase() !== "canceled"
   )
   
   const pastAppointments = appointments.filter(
     (appointment: Appointment) => 
       new Date(appointment.dateTime) < currentDate || 
-      appointment.status === "Cancelled"
+      appointment.status.toLowerCase() === "cancelled" || 
+      appointment.status.toLowerCase() === "canceled"
   )
-
+  console.log(appointments);
   return (
     <Layout title="My Appointments">
       <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
@@ -91,19 +106,26 @@ export default function AppointmentsPage() {
                     <Card>
                       <CardContent>
                         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                          <Typography variant="h6">{appointment.doctorName}</Typography>
-                          <Chip label={appointment.status} color={getStatusColor(appointment.status) as any} size="small" />
+                          <Typography variant="h6">{appointment.doctorId.name}</Typography>
+                          <Chip 
+                            label={appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)} 
+                            color={getStatusColor(appointment.status) as any} 
+                            size="small" 
+                          />
                         </Box>
                         <Typography variant="body2" color="text.secondary">
-                          {appointment.doctorSpecialty}
+                          {appointment.doctorId.specialty}
                         </Typography>
                         <Typography variant="body1">
                           {new Date(appointment.dateTime).toLocaleDateString()} at {new Date(appointment.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {appointment.endTime && ` - ${new Date(appointment.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                         </Typography>
-                        <Typography variant="body2">{appointment.location}</Typography>
-                        <Typography variant="body2">Reason: {appointment.reason}</Typography>
+                        <Typography variant="body2">Reason: {appointment.reasonForVisit}</Typography>
+                        {appointment.notes && (
+                          <Typography variant="body2">Notes: {appointment.notes}</Typography>
+                        )}
 
-                        {appointment.status === "Confirmed" && (
+                        {(appointment.status.toLowerCase() === "confirmed" || appointment.status.toLowerCase() === "scheduled") && (
                           <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
                             <Button variant="outlined" component={Link} href={`/booking/reschedule/${appointment._id}`} size="small">
                               Reschedule
@@ -142,19 +164,26 @@ export default function AppointmentsPage() {
                     <Card>
                       <CardContent>
                         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                          <Typography variant="h6">{appointment.doctorName}</Typography>
-                          <Chip label={appointment.status} color={getStatusColor(appointment.status) as any} size="small" />
+                          <Typography variant="h6">{appointment.doctorId.name}</Typography>
+                          <Chip 
+                            label={appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)} 
+                            color={getStatusColor(appointment.status) as any} 
+                            size="small" 
+                          />
                         </Box>
                         <Typography variant="body2" color="text.secondary">
-                          {appointment.doctorSpecialty}
+                          {appointment.doctorId.specialty}
                         </Typography>
                         <Typography variant="body1">
                           {new Date(appointment.dateTime).toLocaleDateString()} at {new Date(appointment.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {appointment.endTime && ` - ${new Date(appointment.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                         </Typography>
-                        <Typography variant="body2">{appointment.location}</Typography>
-                        <Typography variant="body2">Reason: {appointment.reason}</Typography>
+                        <Typography variant="body2">Reason: {appointment.reasonForVisit}</Typography>
+                        {appointment.notes && (
+                          <Typography variant="body2">Notes: {appointment.notes}</Typography>
+                        )}
 
-                        {appointment.status === "Completed" && (
+                        {appointment.status.toLowerCase() === "completed" && (
                           <Button variant="outlined" component={Link} href={`/appointments/${appointment._id}/summary`} size="small" sx={{ mt: 2 }}>
                             View Summary
                           </Button>
