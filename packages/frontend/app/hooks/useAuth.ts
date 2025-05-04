@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import * as authService from '../services/authService';
+import { IDoctor, IUser } from '@medical/shared/types';
 
 // Query keys
 export const authKeys = {
@@ -12,6 +13,7 @@ export const useCurrentUser = () => {
   return useQuery(authKeys.user, () => authService.getCurrentUser(), {
     retry: false,
     refetchOnWindowFocus: false,
+    select: (data) => data.data,
     onError: () => {
       // If we get an error, it's likely because the user is not authenticated
       // We can handle this by not doing anything special here
@@ -44,7 +46,7 @@ export const useLogin = () => {
 export const useRegister = () => {
   const queryClient = useQueryClient();
 
-  return useMutation((userData: any) => authService.register(userData), {
+  return useMutation((userData: IUser| IDoctor) => authService.register(userData), {
     onSuccess: (data) => {
       console.log('query data ', data);
       // Update the user in the cache

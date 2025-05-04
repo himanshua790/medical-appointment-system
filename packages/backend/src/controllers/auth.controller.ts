@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import jwt from 'jsonwebtoken';
+import * as jwt from 'jsonwebtoken';
 import User from '../models/user.model';
 
 // Environment variables
@@ -111,10 +111,18 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
   }
 };
 
-export const me = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const me = (req: Request, res: Response, next: NextFunction): void => {
+  // @ts-ignore - TypeScript doesn't recognize we've declared the user property
+  if (!req.user) {
+    res.status(401).json({
+      success: false,
+      message: 'Unauthorized',
+    });
+    return;
+  }
   res.status(200).json({
     success: true,
+    // @ts-ignore - TypeScript doesn't recognize we've declared the user property
     user: req.user,
   });
 };
-

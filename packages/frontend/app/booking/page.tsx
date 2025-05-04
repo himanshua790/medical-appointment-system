@@ -27,11 +27,19 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useAllDoctors, useDoctorById, useDoctorAvailability } from '../hooks/useDoctors';
 import { useCreateAppointment } from '../hooks/useAppointments';
 import { useAuth } from '@/context/AuthContext';
-import { format } from 'date-fns';
-import { IDoctor, ITimeSlot } from '@medical/shared/types';
+import { format, parseISO } from 'date-fns';
+import { IDoctor, ITimeSlot, IUser } from '@medical/shared/types';
 
 const steps = ['Select Doctor', 'Choose Date & Time', 'Enter Details', 'Confirm'];
 
+// Extended interfaces to handle MongoDB document properties
+interface DoctorWithId extends IDoctor {
+  _id: string;
+}
+
+interface UserWithId extends IUser {
+  _id: string;
+}
 
 export default function BookingPage() {
   const searchParams = useSearchParams();
@@ -70,19 +78,18 @@ export default function BookingPage() {
         if (!user || !selectedDoctor || !selectedDate || !selectedTime || !reason) {
           throw new Error('Missing required booking information');
         }
-
-        // Format date and time for API
-        const [hours, minutes] = selectedTime.split(':');
-        const appointmentDate = new Date(selectedDate);
-        appointmentDate.setHours(parseInt(hours, 10), parseInt(minutes, 10));
+        
+        // Use the selectedTime directly since it's already an ISO string from the time slot
+        const appointmentDateTime = parseISO(selectedTime);
         
         // Calculate end time (30 min appointment)
-        const endTimeDate = new Date(appointmentDate);
-        endTimeDate.setMinutes(appointmentDate.getMinutes() + 30);
-
+        const endTimeDate = new Date(appointmentDateTime);
+        endTimeDate.setMinutes(appointmentDateTime.getMinutes() + 30);
+        
         const appointmentData = {
+          patientId: (user as UserWithId)._id,
           doctorId: selectedDoctor,
-          dateTime: appointmentDate.toISOString(),
+          dateTime: appointmentDateTime.toISOString(),
           endTime: endTimeDate.toISOString(),
           reasonForVisit: reason,
           notes,
@@ -92,12 +99,12 @@ export default function BookingPage() {
           onSuccess: () => {
             router.push('/appointments');
           },
-          onError: (err) => {
+          onError: (err: any) => {
             console.error('Error booking appointment:', err);
-            setError('Failed to book appointment. Please try again.');
+            setError(err?.message || 'Failed to book appointment. Please try again.');
           },
         });
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error with booking data:', err);
         setError('Please check all required fields are filled correctly.');
       }
@@ -124,7 +131,7 @@ export default function BookingPage() {
   };
 
   const getSelectedDoctorName = () => {
-    const doctor = doctors.find((d: IDoctor) => d._id === selectedDoctor);
+    const doctor = doctors.find((d: DoctorWithId) => d._id === selectedDoctor);
     return doctor ? doctor.name : selectedDoctorData?.name || '';
   };
 
@@ -169,7 +176,7 @@ export default function BookingPage() {
                         onChange={(e) => setSelectedDoctor(e.target.value)}
                         label="Doctor"
                       >
-                        {doctors.map((doctor: IDoctor) => (
+                        {doctors.map((doctor: DoctorWithId) => (
                           <MenuItem key={doctor._id} value={doctor._id}>
                             {doctor.name} - {doctor.specialty}
                           </MenuItem>
@@ -196,28 +203,33 @@ export default function BookingPage() {
                             setSelectedTime(null); // Reset time when date changes
                           }}
                           slotProps={{ textField: { fullWidth: true, margin: 'normal' } }}
+                          minDate={new Date()}
                         />
                       </LocalizationProvider>
                     </Grid>
-                    <Grid size={{ xs: 12, md: 6 }}>
+                    <Grid size={{ xs: 12, md: 6 }} minWidth={200}>
                       <FormControl fullWidth sx={{ mt: 2 }}>
                         <InputLabel>Time Slot</InputLabel>
                         <Select
                           value={selectedTime || ''}
-                          onChange={(e) => setSelectedTime(e.target.value)}
+                          onChange={(e) => {
+                            setSelectedTime(e.target.value);
+                          }}
                           label="Time Slot"
                           disabled={!selectedDate || isLoadingAvailability}
+                          fullWidth
                         >
                           {isLoadingAvailability ? (
                             <MenuItem disabled>Loading time slots...</MenuItem>
                           ) : availabilityData.length > 0 ? (
                             availabilityData.map((slot: ITimeSlot) => (
                               <MenuItem
-                                key={slot?.start?.toString()}
-                                value={slot?.start?.toString()}
-                                disabled={!slot?.isAvailable}
+                                key={slot.start.toString()}
+                                value={slot.start.toString()}
+                                disabled={!slot.isAvailable}
                               >
-                                {format(slot?.start, 'HH:mm')} {!slot?.isAvailable && '(Unavailable)'}
+                                {format(new Date(slot.start), 'HH:mm')}{' '}
+                                {!slot.isAvailable && '(Unavailable)'}
                               </MenuItem>
                             ))
                           ) : (
@@ -267,9 +279,11 @@ export default function BookingPage() {
                   </Typography>
                   <Typography variant="body1">Doctor: {getSelectedDoctorName()}</Typography>
                   <Typography variant="body1">
-                    Date: {selectedDate?.toLocaleDateString()}
+                    Date: {selectedDate ? format(selectedDate, 'dd/MM/yyyy') : ''}
                   </Typography>
-                  <Typography variant="body1">Time: {selectedTime}</Typography>
+                  <Typography variant="body1">
+                    Time: {selectedTime ? format(new Date(selectedTime), 'h:mm a') : ''}
+                  </Typography>
                   <Typography variant="body1">Reason: {reason}</Typography>
                   {notes && <Typography variant="body1">Additional Notes: {notes}</Typography>}
                 </Box>

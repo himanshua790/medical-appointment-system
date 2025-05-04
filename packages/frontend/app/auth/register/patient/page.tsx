@@ -22,11 +22,8 @@ export default function PatientRegistrationPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState('');
-  
+
   const router = useRouter();
   const { mutate: register, isLoading } = useRegister();
 
@@ -35,7 +32,7 @@ export default function PatientRegistrationPage() {
     setError('');
 
     // Validation
-    if (!username || !email || !password || !confirmPassword || !firstName || !lastName) {
+    if (!username || !email || !password || !confirmPassword) {
       setError('Please fill in all required fields');
       return;
     }
@@ -51,23 +48,22 @@ export default function PatientRegistrationPage() {
     }
 
     try {
-      register({
-        username,
-        email,
-        password,
-        firstName,
-        lastName,
-        phoneNumber,
-        role: 'patient',
-        userType: 'patient'
-      }, {
-        onSuccess: () => {
-          router.push('/dashboard');
+      register(
+        {
+          username,
+          email,
+          password,
+          role: 'patient',
         },
-        onError: (err: any) => {
-          setError(err?.message || 'Registration failed. Please try again.');
+        {
+          onSuccess: () => {
+            router.push('/dashboard');
+          },
+          onError: (err: any) => {
+            setError(err?.message || 'Registration failed. Please try again.');
+          },
         }
-      });
+      );
     } catch (err: any) {
       setError(err?.message || 'Registration failed. Please try again.');
     }
@@ -81,35 +77,15 @@ export default function PatientRegistrationPage() {
             <Typography variant="h5" component="h1" gutterBottom>
               Create Patient Account
             </Typography>
-            
+
             {error && (
               <Alert severity="error" sx={{ mb: 3 }}>
                 {error}
               </Alert>
             )}
-            
+
             <form onSubmit={handleSubmit}>
               <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    label="First Name"
-                    fullWidth
-                    required
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    label="Last Name"
-                    fullWidth
-                    required
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </Grid>
                 <Grid size={{ xs: 12 }}>
                   <TextField
                     label="Username"
@@ -131,15 +107,7 @@ export default function PatientRegistrationPage() {
                     disabled={isLoading}
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <TextField
-                    label="Phone Number"
-                    fullWidth
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </Grid>
+
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     label="Password"
@@ -175,14 +143,14 @@ export default function PatientRegistrationPage() {
                 </Grid>
               </Grid>
             </form>
-            
+
             <Box sx={{ mt: 3, textAlign: 'center' }}>
               <Typography variant="body2">
                 Already have an account? <Link href="/auth">Login</Link>
               </Typography>
               <Typography variant="body2" sx={{ mt: 1 }}>
                 Register as a: <Link href="/auth/register/doctor">Doctor</Link>
-                 {/* | <Link href="/auth/register/admin">Administrator</Link> */}
+                {/* | <Link href="/auth/register/admin">Administrator</Link> */}
               </Typography>
             </Box>
           </CardContent>
@@ -190,4 +158,4 @@ export default function PatientRegistrationPage() {
       </Box>
     </Layout>
   );
-} 
+}

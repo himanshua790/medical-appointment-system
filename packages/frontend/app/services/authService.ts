@@ -1,3 +1,5 @@
+import { IDoctor } from '@medical/shared/types';
+import { IUser } from '@medical/shared/types';
 import { apiCall } from '../../utils/api';
 // API base URL from environment or default
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -12,12 +14,7 @@ export const login = async (credentials: { email: string; password: string }) =>
 /**
  * User registration
  */
-export const register = async (userData: {
-  username: string;
-  email: string;
-  password: string;
-  role?: string;
-}) => {
+export const register = async (userData: IUser| IDoctor) => {
   return apiCall(API_BASE_URL + '/auth/register', 'POST', userData, false);
 };
 

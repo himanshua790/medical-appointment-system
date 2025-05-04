@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useRegister } from '@/app/hooks/useAuth';
+import Layout from '@/components/layout';
 import {
   Alert,
   Box,
@@ -8,19 +9,14 @@ import {
   Card,
   CardContent,
   CircularProgress,
-  FormControl,
   Grid,
-  InputLabel,
-  MenuItem,
-  Select,
   TextField,
-  Typography,
+  Typography
 } from '@mui/material';
-import Layout from '@/components/layout';
-import { useRouter } from 'next/navigation';
-import { useRegister } from '@/app/hooks/useAuth';
-import Link from 'next/link';
 import { AxiosError } from 'axios';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 // List of medical specialties
 const specialties = [
@@ -46,12 +42,6 @@ export default function DoctorRegistrationPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [specialty, setSpecialty] = useState('');
-  const [qualifications, setQualifications] = useState('');
-  const [licenseNumber, setLicenseNumber] = useState('');
   const [error, setError] = useState('');
 
   const router = useRouter();
@@ -66,11 +56,7 @@ export default function DoctorRegistrationPage() {
       !username ||
       !email ||
       !password ||
-      !confirmPassword ||
-      !firstName ||
-      !lastName ||
-      !specialty ||
-      !licenseNumber
+      !confirmPassword  
     ) {
       setError('Please fill in all required fields');
       return;
@@ -92,14 +78,7 @@ export default function DoctorRegistrationPage() {
           username,
           email,
           password,
-          firstName,
-          lastName,
-          phoneNumber,
-          specialty,
-          qualifications,
-          licenseNumber,
           role: 'doctor',
-          userType: 'doctor',
         },
         {
           onSuccess: () => {
@@ -140,26 +119,6 @@ export default function DoctorRegistrationPage() {
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
-                    label="First Name"
-                    fullWidth
-                    required
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    label="Last Name"
-                    fullWidth
-                    required
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
                     label="Username"
                     fullWidth
                     required
@@ -176,54 +135,6 @@ export default function DoctorRegistrationPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    label="Phone Number"
-                    fullWidth
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <FormControl fullWidth required>
-                    <InputLabel>Specialty</InputLabel>
-                    <Select
-                      value={specialty}
-                      label="Specialty"
-                      onChange={(e) => setSpecialty(e.target.value)}
-                      disabled={isLoading}
-                    >
-                      {specialties.map((spec) => (
-                        <MenuItem key={spec} value={spec}>
-                          {spec}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <TextField
-                    label="License Number"
-                    fullWidth
-                    required
-                    value={licenseNumber}
-                    onChange={(e) => setLicenseNumber(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <TextField
-                    label="Qualifications"
-                    fullWidth
-                    multiline
-                    rows={3}
-                    placeholder="e.g., MD from Harvard Medical School, Board Certified in Internal Medicine"
-                    value={qualifications}
-                    onChange={(e) => setQualifications(e.target.value)}
                     disabled={isLoading}
                   />
                 </Grid>

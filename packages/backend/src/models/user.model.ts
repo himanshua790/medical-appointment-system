@@ -1,6 +1,6 @@
 import { Schema, Model, model } from 'mongoose';
 import { IUser } from '@medical/shared/types';
-import bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcryptjs';
 
 interface IUserMethods {
   comparePassword(candidatePassword: string): Promise<boolean>;

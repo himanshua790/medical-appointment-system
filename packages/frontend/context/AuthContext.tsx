@@ -5,11 +5,9 @@ import { useLogin, useRegister, useCurrentUser } from '../app/hooks/useAuth';
 import { getToken, getUser, logout as logoutUtil } from '../utils/api';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from 'react-query';
+import { IUser } from '@medical/shared/types';
 
-interface User {
-  username: string;
-  email: string;
-  role: string;
+interface User extends IUser {
   _id: string;
 }
 
@@ -25,7 +23,7 @@ interface AuthContextProps {
 const AuthContext = createContext<AuthContextProps>({
   user: null,
   isAuthenticated: false,
-  isLoading: true,
+  isLoading: false,
   login: async () => {},
   register: async () => {},
   logout: () => {},
@@ -62,6 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Update user when React Query data changes
   useEffect(() => {
     if (currentUser && !isLoadingUser) {
+      console.log('currentUser', currentUser)
       setUser(currentUser);
     }
   }, [currentUser, isLoadingUser]);
@@ -69,8 +68,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const loginHandler = async (email: string, password: string) => {
     try {
       const response = await loginMutation({ email, password });
-      
+
       if (response && response.data) {
+        console.log('set user response', response)
         setUser(response.data.user);
         router.push('/dashboard');
       }
@@ -85,6 +85,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const response = await registerMutation(userData);
       
       if (response && response.data) {
+        console.log('set user response2', response)
         setUser(response.data.user);
         router.push('/dashboard');
       }

@@ -17,6 +17,7 @@ export const useUserAppointments = () => {
     () => appointmentService.getUserAppointments(),
     {
       select: (data) => data.data || [],
+      staleTime: 0,
     }
   );
 };
