@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useLogin, useRegister, useCurrentUser } from '../app/hooks/useAuth';
@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const queryClient = useQueryClient();
-  
+
   // Use React Query hooks
   const { mutateAsync: loginMutation } = useLogin();
   const { mutateAsync: registerMutation } = useRegister();
@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (token && storedUser) {
         setUser(storedUser);
       }
-      
+
       setIsLoading(false);
     };
 
@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Update user when React Query data changes
   useEffect(() => {
     if (currentUser && !isLoadingUser) {
-      console.log('currentUser', currentUser)
+      console.log('currentUser', currentUser);
       setUser(currentUser);
     }
   }, [currentUser, isLoadingUser]);
@@ -70,12 +70,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const response = await loginMutation({ email, password });
 
       if (response && response.data) {
-        console.log('set user response', response)
+        console.log('set user response', response);
         setUser(response.data.user);
         router.push('/dashboard');
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login error:', error?.response?.data?.message || error);
       throw error;
     }
   };
@@ -83,9 +83,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const registerHandler = async (userData: any) => {
     try {
       const response = await registerMutation(userData);
-      
+
       if (response && response.data) {
-        console.log('set user response2', response)
+        console.log('set user response2', response);
         setUser(response.data.user);
         router.push('/dashboard');
       }
@@ -98,10 +98,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logoutHandler = () => {
     logoutUtil();
     setUser(null);
-    
+
     // Clear all query cache
     queryClient.clear();
-    
+
     router.push('/');
   };
 
@@ -119,4 +119,4 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       {children}
     </AuthContext.Provider>
   );
-}; 
+};
