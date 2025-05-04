@@ -181,7 +181,8 @@ export default function PatientRegistrationPage() {
                 Already have an account? <Link href="/auth">Login</Link>
               </Typography>
               <Typography variant="body2" sx={{ mt: 1 }}>
-                Register as a: <Link href="/auth/register/doctor">Doctor</Link> | <Link href="/auth/register/admin">Administrator</Link>
+                Register as a: <Link href="/auth/register/doctor">Doctor</Link>
+                 {/* | <Link href="/auth/register/admin">Administrator</Link> */}
               </Typography>
             </Box>
           </CardContent>

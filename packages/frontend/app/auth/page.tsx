@@ -24,8 +24,6 @@ export default function AuthPage() {
   const [tabValue, setTabValue] = useState(0);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,7 +32,7 @@ export default function AuthPage() {
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/dashboard';
   
-  const { login, register, isAuthenticated, isLoading } = useAuth();
+  const { login, isAuthenticated, isLoading } = useAuth();
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -65,36 +63,6 @@ export default function AuthPage() {
     }
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    // Simple validation
-    if (!username || !email || !password || !confirmPassword) {
-      setError('Please fill in all fields');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      await register({
-        username,
-        email,
-        password,
-        role: 'patient', // Default role
-      });
-
-      // Redirect will be handled by the auth context
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
-      setIsSubmitting(false);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -117,7 +85,6 @@ export default function AuthPage() {
             sx={{ mb: 3 }}
           >
             <Tab label="Login" />
-            <Tab label="Register" />
           </Tabs>
 
           {error && (
@@ -166,58 +133,13 @@ export default function AuthPage() {
               >
                 {isSubmitting ? 'Signing in...' : 'Sign In'}
               </Button>
-            </form>
-          )}
-
-          {tabValue === 1 && (
-            <form onSubmit={handleRegister}>
-              <TextField
-                label="Username"
-                fullWidth
-                margin="normal"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                disabled={isSubmitting}
-                required
-              />
-              <TextField
-                label="Email"
-                type="email"
-                fullWidth
-                margin="normal"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isSubmitting}
-                required
-              />
-              <TextField
-                label="Password"
-                type="password"
-                fullWidth
-                margin="normal"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isSubmitting}
-                required
-              />
-              <TextField
-                label="Confirm Password"
-                type="password"
-                fullWidth
-                margin="normal"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={isSubmitting}
-                required
-              />
               <Button
-                type="submit"
-                variant="contained"
+                variant="outlined"
                 fullWidth
-                sx={{ mt: 3, mb: 2 }}
-                disabled={isSubmitting}
+                sx={{ mb: 2 }}
+                onClick={() => router.push('/auth/register/patient')}
               >
-                {isSubmitting ? 'Signing up...' : 'Sign Up'}
+                Register as Patient
               </Button>
             </form>
           )}
