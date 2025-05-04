@@ -1,24 +1,24 @@
 'use client';
 
 import type React from 'react';
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
+  Alert,
   Button,
   Card,
   CardContent,
   Checkbox,
+  CircularProgress,
   FormControlLabel,
   Tab,
   Tabs,
   TextField,
 } from '@mui/material';
 import Layout from '@/components/layout';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 
 // API base URL from environment or default
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export default function AuthPage() {
   const [tabValue, setTabValue] = useState(0);
@@ -28,8 +28,20 @@ export default function AuthPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const router = useRouter();
-  const { login, register, loading } = useAuth();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get('redirect') || '/dashboard';
+  
+  const { login, register, isAuthenticated, isLoading } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      router.push(redirect);
+    }
+  }, [isAuthenticated, isLoading, router, redirect]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,10 +54,14 @@ export default function AuthPage() {
     }
 
     try {
-      await login(email, password, rememberMe);
+      setIsSubmitting(true);
+      await login(email, password);
       // Redirect handled in auth context
+      router.push(redirect);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      setError(err instanceof Error ? err.message : 'Invalid email or password');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -65,6 +81,7 @@ export default function AuthPage() {
     }
 
     try {
+      setIsSubmitting(true);
       await register({
         username,
         email,
@@ -72,15 +89,22 @@ export default function AuthPage() {
         role: 'patient', // Default role
       });
 
-      // Registration successful, switch to login tab
-      setTabValue(0);
-      setEmail(''); // Reset email field
-      setPassword(''); // Reset password field
-      alert('Registration successful! Please log in.');
+      // Redirect will be handled by the auth context
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      setError(err instanceof Error ? err.message : 'Registration failed');
+      setIsSubmitting(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <Layout title="Authentication">
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
+          <CircularProgress />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout title="Account">
@@ -97,7 +121,9 @@ export default function AuthPage() {
           </Tabs>
 
           {error && (
-            <div style={{ color: 'red', marginBottom: '1rem', textAlign: 'center' }}>{error}</div>
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
           )}
 
           {tabValue === 0 && (
@@ -109,7 +135,7 @@ export default function AuthPage() {
                 margin="normal"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
+                disabled={isSubmitting}
                 required
               />
               <TextField
@@ -119,7 +145,7 @@ export default function AuthPage() {
                 margin="normal"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
+                disabled={isSubmitting}
                 required
               />
               <FormControlLabel
@@ -136,9 +162,9 @@ export default function AuthPage() {
                 variant="contained"
                 fullWidth
                 sx={{ mt: 3, mb: 2 }}
-                disabled={loading}
+                disabled={isSubmitting}
               >
-                {loading ? 'Signing in...' : 'Sign In'}
+                {isSubmitting ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
           )}
@@ -151,7 +177,7 @@ export default function AuthPage() {
                 margin="normal"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                disabled={loading}
+                disabled={isSubmitting}
                 required
               />
               <TextField
@@ -161,7 +187,7 @@ export default function AuthPage() {
                 margin="normal"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
+                disabled={isSubmitting}
                 required
               />
               <TextField
@@ -171,7 +197,7 @@ export default function AuthPage() {
                 margin="normal"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
+                disabled={isSubmitting}
                 required
               />
               <TextField
@@ -181,7 +207,7 @@ export default function AuthPage() {
                 margin="normal"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={loading}
+                disabled={isSubmitting}
                 required
               />
               <Button
@@ -189,9 +215,9 @@ export default function AuthPage() {
                 variant="contained"
                 fullWidth
                 sx={{ mt: 3, mb: 2 }}
-                disabled={loading}
+                disabled={isSubmitting}
               >
-                {loading ? 'Signing up...' : 'Sign Up'}
+                {isSubmitting ? 'Signing up...' : 'Sign Up'}
               </Button>
             </form>
           )}

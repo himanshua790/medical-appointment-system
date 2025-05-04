@@ -6,7 +6,8 @@
     "target": "ES2020",
     "module": "CommonJS",
     "esModuleInterop": true,
-    "composite": true
+    "composite": true,
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
   "include": ["src/**/*"],
   "references": [{ "path": "../shared" }]

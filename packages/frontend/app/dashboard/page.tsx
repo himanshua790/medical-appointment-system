@@ -4,25 +4,58 @@ import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import Layout from "@/components/layout"
+import { useUserAppointments } from "../hooks/useAppointments"
+import { Box, Button, Card, CardContent, Chip, CircularProgress, Grid, Typography } from "@mui/material"
+import Link from "next/link"
+
+interface Appointment {
+  _id: string;
+  doctorId: any;
+  dateTime: string;
+  reason: string;
+  status: string;
+  doctorName?: string;
+}
 
 export default function DashboardPage() {
-  const { user, loading, isAuthenticated } = useAuth()
+  const { user, isLoading, isAuthenticated } = useAuth()
+  const { data: appointments = [], isLoading: isLoadingAppointments, error } = useUserAppointments()
   const router = useRouter()
 
+  // Redirect to login if not authenticated and not loading
   useEffect(() => {
-    // Redirect to login if not authenticated and not loading
-    if (!loading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.push("/auth")
     }
-  }, [loading, isAuthenticated, router])
+  }, [isLoading, isAuthenticated, router])
+
+  // Filter for upcoming appointments
+  const currentDate = new Date()
+  const upcomingAppointments = appointments
+    .filter(
+      (appointment: Appointment) => 
+        new Date(appointment.dateTime) >= currentDate && 
+        appointment.status !== "Cancelled"
+    )
+    .sort((a: Appointment, b: Appointment) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
+    .slice(0, 3) // Show only the next 3 upcoming appointments
+
+  // Function to format date
+  const formatAppointmentDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return {
+      date: date.toLocaleDateString(),
+      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }
+  }
 
   // Show loading state while checking authentication
-  if (loading) {
+  if (isLoading) {
     return (
       <Layout title="Dashboard">
-        <div className="flex justify-center items-center h-64">
-          <p>Loading...</p>
-        </div>
+        <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+          <CircularProgress />
+        </Box>
       </Layout>
     )
   }
@@ -30,25 +63,112 @@ export default function DashboardPage() {
   // Protected content (only shown when authenticated)
   return (
     <Layout title="Dashboard">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
-          <h2 className="text-2xl font-bold mb-4">Welcome, {user?.username}!</h2>
-          <p className="text-gray-600">
-            This is your personal dashboard where you can manage appointments and medical records.
-          </p>
-        </div>
+      <Box sx={{ maxWidth: "lg", mx: "auto" }}>
+        <Card sx={{ mb: 4 }}>
+          <CardContent>
+            <Typography variant="h5" gutterBottom>
+              Welcome, {user?.username}!
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              This is your personal dashboard where you can manage appointments and medical information.
+            </Typography>
+          </CardContent>
+        </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white shadow rounded-lg p-6">
-            <h3 className="text-xl font-semibold mb-3">Upcoming Appointments</h3>
-            <p className="text-gray-500">No upcoming appointments.</p>
-          </div>
-          <div className="bg-white shadow rounded-lg p-6">
-            <h3 className="text-xl font-semibold mb-3">Recent Medical Records</h3>
-            <p className="text-gray-500">No recent records.</p>
-          </div>
-        </div>
-      </div>
+        <Grid container spacing={4}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Card sx={{ height: "100%" }}>
+              <CardContent>
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                  <Typography variant="h6">Upcoming Appointments</Typography>
+                  <Button component={Link} href="/appointments" size="small">
+                    View All
+                  </Button>
+                </Box>
+                
+                {isLoadingAppointments ? (
+                  <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : error ? (
+                  <Typography color="error">Failed to load appointments</Typography>
+                ) : upcomingAppointments.length > 0 ? (
+                  upcomingAppointments.map((appointment: Appointment) => {
+                    const { date, time } = formatAppointmentDate(appointment.dateTime)
+                    return (
+                      <Box 
+                        key={appointment._id}
+                        sx={{ 
+                          p: 2, 
+                          mb: 2, 
+                          border: "1px solid", 
+                          borderColor: "divider", 
+                          borderRadius: 1,
+                          '&:last-child': { mb: 0 }
+                        }}
+                      >
+                        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+                          <Typography variant="subtitle1">{appointment.doctorName}</Typography>
+                          <Chip 
+                            label={appointment.status} 
+                            size="small" 
+                            color={appointment.status === "Confirmed" ? "success" : "warning"}
+                          />
+                        </Box>
+                        <Typography variant="body2">{date} at {time}</Typography>
+                        <Typography variant="body2" color="text.secondary">{appointment.reason}</Typography>
+                      </Box>
+                    )
+                  })
+                ) : (
+                  <Box sx={{ textAlign: "center", py: 3 }}>
+                    <Typography color="text.secondary">No upcoming appointments</Typography>
+                    <Button component={Link} href="/doctors" variant="contained" sx={{ mt: 2 }}>
+                      Book an Appointment
+                    </Button>
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+          
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Card sx={{ height: "100%" }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Quick Actions
+                </Typography>
+                <Button 
+                  component={Link} 
+                  href="/doctors" 
+                  variant="outlined" 
+                  fullWidth 
+                  sx={{ mb: 2 }}
+                >
+                  Find a Doctor
+                </Button>
+                <Button 
+                  component={Link} 
+                  href="/appointments" 
+                  variant="outlined" 
+                  fullWidth 
+                  sx={{ mb: 2 }}
+                >
+                  View Appointments
+                </Button>
+                <Button 
+                  component={Link} 
+                  href="/profile" 
+                  variant="outlined" 
+                  fullWidth
+                >
+                  Update Profile
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      </Box>
     </Layout>
   )
 } 
